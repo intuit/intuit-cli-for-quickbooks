@@ -1,7 +1,7 @@
 import http from "node:http";
 import crypto from "node:crypto";
 import OAuthClient from "intuit-oauth";
-import { createOAuthClient } from "../lib/oauth.js";
+import { createOAuthClient, refreshExpiresAt } from "../lib/oauth.js";
 import { tokenStore, profileStore } from "../lib/token-store.js";
 import { configureTls } from "../lib/tls.js";
 const CALLBACK_TIMEOUT_MS = 120_000; // 2 minutes
@@ -130,6 +130,7 @@ export async function authLogin(profile, env, redirectUri, extraScopes = []) {
         refresh_token: authResponse.token.refresh_token,
         realmId,
         expires_at: Date.now() + 3600 * 1000,
+        refresh_expires_at: refreshExpiresAt(authResponse.token),
         requestedScopes,
     }, profile);
     profileStore.add(profile, env, realmId);

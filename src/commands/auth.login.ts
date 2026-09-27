@@ -1,7 +1,7 @@
 import http from "node:http";
 import crypto from "node:crypto";
 import OAuthClient from "intuit-oauth";
-import { createOAuthClient } from "../lib/oauth.js";
+import { createOAuthClient, refreshExpiresAt } from "../lib/oauth.js";
 import { tokenStore, profileStore } from "../lib/token-store.js";
 import { configureTls } from "../lib/tls.js";
 
@@ -154,6 +154,7 @@ export async function authLogin(
     refresh_token: authResponse.token.refresh_token,
     realmId,
     expires_at: Date.now() + 3600 * 1000,
+    refresh_expires_at: refreshExpiresAt(authResponse.token),
     requestedScopes,
   }, profile);
 

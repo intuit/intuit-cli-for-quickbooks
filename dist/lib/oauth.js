@@ -24,3 +24,31 @@ export function createOAuthClient(env, redirectUri) {
         logging: false
     });
 }
+// Lifetime Intuit gives a refresh token (the x_refresh_token_expires_in in its
+// token responses). Used only for tokens saved before refresh_expires_at was
+// stored.
+export const DEFAULT_REFRESH_TOKEN_LIFETIME_SECONDS = 8726400;
+/**
+ * Load a stored refresh token into the client before calling `oauth.refresh()`.
+ *
+ * intuit-oauth checks the refresh token's expiry locally before it calls Intuit
+ * (`validateToken` → `isRefreshTokenValid`). With only `refresh_token` set, that
+ * expiry is undefined, the check always fails, and every refresh throws "The
+ * Refresh token is invalid, please Authorize again." without reaching Intuit.
+ * So pass the token's remaining lifetime; Intuit still makes the final call.
+ */
+export function loadRefreshToken(oauth, refreshToken, refreshExpiresAt) {
+    const now = Date.now();
+    const lifetimeSeconds = refreshExpiresAt !== undefined
+        ? Math.floor((refreshExpiresAt - now) / 1000)
+        : DEFAULT_REFRESH_TOKEN_LIFETIME_SECONDS;
+    oauth.setToken({
+        refresh_token: refreshToken,
+        x_refresh_token_expires_in: lifetimeSeconds,
+        createdAt: now,
+    });
+}
+/** When a refresh token from an Intuit token response expires, in epoch ms. */
+export function refreshExpiresAt(token) {
+    return Date.now() + (token.x_refresh_token_expires_in ?? DEFAULT_REFRESH_TOKEN_LIFETIME_SECONDS) * 1000;
+}

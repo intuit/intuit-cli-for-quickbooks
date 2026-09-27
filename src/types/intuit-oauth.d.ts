@@ -18,6 +18,7 @@ declare module "intuit-oauth" {
       refresh_token: string;
       realmId: string;
       createdAt: number;
+      x_refresh_token_expires_in?: number;
     };
   }
 

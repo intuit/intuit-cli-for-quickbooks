@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import crypto from "node:crypto";
-import { createOAuthClient } from "./oauth.js";
+import { createOAuthClient, loadRefreshToken, refreshExpiresAt } from "./oauth.js";
 import { getOrCreateKey, deleteKey } from "./keychain.js";
 import { configureTls } from "./tls.js";
 const TOKEN_DIR = path.join(os.homedir(), ".config", "intuit-cli");
@@ -136,13 +136,14 @@ export const tokenStore = {
         const info = profileStore.getInfo(p);
         configureTls();
         const oauth = createOAuthClient(info?.env);
-        oauth.setToken({ refresh_token: token.refresh_token });
+        loadRefreshToken(oauth, token.refresh_token, token.refresh_expires_at);
         const authResponse = await oauth.refresh();
         const refreshed = {
             access_token: authResponse.token.access_token,
             refresh_token: authResponse.token.refresh_token,
             realmId: token.realmId,
             expires_at: Date.now() + 3600 * 1000,
+            refresh_expires_at: refreshExpiresAt(authResponse.token),
             // Refresh tokens inherit the original token's scope set — preserve so
             // auth status / Premium checks survive auto-refresh.
             requestedScopes: token.requestedScopes,

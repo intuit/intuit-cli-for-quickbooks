@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Token refresh no longer fails with "The Refresh token is invalid, please Authorize again." one hour after `auth login`. The CLI loaded only `refresh_token` into intuit-oauth, whose local expiry check then always failed before any request reached Intuit, so both automatic refresh and `auth refresh` broke once the access token expired. The refresh token's expiry is now stored at login and on each refresh (`refresh_expires_at`) and passed to intuit-oauth; tokens saved by older versions fall back to Intuit's 8726400-second lifetime.
+
 ## [0.2.4] - 2026-07-23
 
 ### Changed
